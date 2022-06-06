@@ -1,23 +1,41 @@
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from http.client import ImproperConnectionState
 import requests  # for using API
 import pickle
 import streamlit as st
 import numpy as np
 import pandas as pd
+import sklearn
 
 df = pickle.load(open('Movies.pkl', 'rb'))
-Similarity = pickle.load(open('Similarity_matrix.pkl', 'rb'))
+# Similarity = pickle.load(open('Similarity_matrix.pkl', 'rb'))
 
 st.title("Movie Recommendation System")
 
 movie_titles = df['title'].values
 
-movie_name = st.selectbox('Tell me, what is your favorite Movie, I will show you more according to that',
-                          movie_titles)
+movie_name = st.selectbox(
+    'Tell me, what is your favorite Movie, I will show you more according to that', movie_titles)
 
 # st.write('You selected:', movie_name)
 
 ############################# Functions ##############################
+# so for converting tags into vector
+# stop_words will be removed
+cv = CountVectorizer(max_features=5000, stop_words='english')
+# max_feature = finding frequent word upto 5000
+
+vector = cv.fit_transform(df['tags']).toarray()
+# vector[0]
+# first movie form corpus (a large string)
+
+similarity = cosine_similarity(vector)
+# it's actually measuring the distance of each record with all 4806 records
+# that's way it has same rows and columns
+
+# as this was unable to upload, so I pasted all method here
+# ========================== Similarity matirx ==========================
 
 
 def fetch_poster(movie_id):
@@ -34,7 +52,7 @@ def fetch_poster(movie_id):
 def recommend(movie):
     movie_index = df[df.title == movie].index[0]
     distance = sorted(
-        list(enumerate(Similarity[movie_index])), reverse=True, key=lambda x: x[1])[1:6]
+        list(enumerate(similarity[movie_index])), reverse=True, key=lambda x: x[1])[1:6]
 
     L = []
     recommended_movies_posters = []
